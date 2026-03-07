@@ -4,6 +4,7 @@ using System.Net;
 namespace RouterQuack.IO.Yaml.Models;
 
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
 public class Router
 {
     public IPAddress? Id { get; init; }
