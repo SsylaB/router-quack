@@ -53,7 +53,6 @@ public partial class YamlParser
                 Id = value.Id ?? routerUtils.GetDefaultId(key),
                 Brand = routerBrand,
                 LoopbackAddress = loopbackAddress,
-                OspfArea = value.OspfArea,
                 Interfaces = [],
                 ParentAs = parentAs,
                 External = value.External ?? externalAs

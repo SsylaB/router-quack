@@ -37,7 +37,6 @@ internal static class TestData
         IPAddress? id = null,
         RouterBrand brand = RouterBrand.Cisco,
         Address? loopbackAddress = null,
-        int ospfArea = 0,
         bool external = false,
         ICollection<Interface>? interfaces = null,
         As? parentAs = null)
@@ -50,7 +49,6 @@ internal static class TestData
             Id = id ?? IPAddress.Parse("1.2.3.4"),
             Brand = brand,
             LoopbackAddress = loopbackAddress,
-            OspfArea = ospfArea,
             External = external,
             Interfaces = interfaceList,
             ParentAs = parentAs!

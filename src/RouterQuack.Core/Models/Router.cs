@@ -14,8 +14,6 @@ public sealed class Router
 
     public required Address? LoopbackAddress { get; set; }
 
-    public required int OspfArea { get; init; }
-
     public required bool External { get; init; }
 
     public required ICollection<Interface> Interfaces { get; set; }

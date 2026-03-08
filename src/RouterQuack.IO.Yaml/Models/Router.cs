@@ -13,8 +13,6 @@ public class Router
 
     public string? Loopback { get; init; }
 
-    public int OspfArea { get; init; } = 0;
-
     public bool? External { get; init; }
 
     public required IDictionary<string, Interface> Interfaces { get; init; }
