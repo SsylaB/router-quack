@@ -5,9 +5,9 @@ using RouterQuack.Tests.Unit.TestHelpers;
 
 namespace RouterQuack.Tests.Unit.Core.Validators;
 
-public class NoDuplicateRouterNamesTests
+public class NoDuplicateRouterNameTests
 {
-    private readonly ILogger<NoDuplicateRouterNames> _logger = Substitute.For<ILogger<NoDuplicateRouterNames>>();
+    private readonly ILogger<NoDuplicateRouterName> _logger = Substitute.For<ILogger<NoDuplicateRouterName>>();
 
     [Test]
     [Arguments("R1", "R2", "R3")]
@@ -17,7 +17,7 @@ public class NoDuplicateRouterNamesTests
         var asses = new List<As> { TestData.CreateAs(routers: routers.ToArray()) };
 
         var context = ContextFactory.Create(asses: asses);
-        var validator = new NoDuplicateRouterNames(_logger, context);
+        var validator = new NoDuplicateRouterName(_logger, context);
         validator.Validate();
 
         await Assert.That(validator.ErrorsOccurred).IsFalse();
@@ -32,7 +32,7 @@ public class NoDuplicateRouterNamesTests
         var asses = new List<As> { TestData.CreateAs(routers: routers.ToArray()) };
 
         var context = ContextFactory.Create(asses: asses);
-        var validator = new NoDuplicateRouterNames(_logger, context);
+        var validator = new NoDuplicateRouterName(_logger, context);
         validator.Validate();
 
         await Assert.That(validator.ErrorsOccurred).IsTrue();
@@ -49,7 +49,7 @@ public class NoDuplicateRouterNamesTests
         };
 
         var context = ContextFactory.Create(asses: asses);
-        var validator = new NoDuplicateRouterNames(_logger, context);
+        var validator = new NoDuplicateRouterName(_logger, context);
         validator.Validate();
 
         await Assert.That(validator.ErrorsOccurred).IsTrue();

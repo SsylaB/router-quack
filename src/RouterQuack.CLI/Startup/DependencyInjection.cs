@@ -57,7 +57,8 @@ public static class DependencyInjection
 
         builder.Services
             .AddKeyedSingleton<IValidator, NoDuplicateIpAddress>(nameof(NoDuplicateIpAddress))
-            .AddKeyedSingleton<IValidator, NoDuplicateRouterNames>(nameof(NoDuplicateRouterNames))
+            .AddKeyedSingleton<IValidator, NoDuplicateLoopbackAddress>(nameof(NoDuplicateLoopbackAddress))
+            .AddKeyedSingleton<IValidator, NoDuplicateRouterName>(nameof(NoDuplicateRouterName))
             .AddKeyedSingleton<IValidator, NoExternalRouterWithoutAddress>(nameof(NoExternalRouterWithoutAddress))
             .AddKeyedSingleton<IValidator, ValidBgpRelationships>(nameof(ValidBgpRelationships))
             .AddKeyedSingleton<IValidator, ValidLoopbackAddresses>(nameof(ValidLoopbackAddresses))

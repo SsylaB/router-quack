@@ -35,10 +35,8 @@ public class NoDuplicateIpAddressTests
     {
         var interfaces = new List<Interface>
         {
-            TestData.CreateInterface(
-                addresses: [TestData.CreateAddress(ip, prefixLength)]),
-            TestData.CreateInterface(
-                addresses: [TestData.CreateAddress(ip, prefixLength)])
+            TestData.CreateInterface(addresses: [TestData.CreateAddress(ip, prefixLength)]),
+            TestData.CreateInterface(addresses: [TestData.CreateAddress(ip, prefixLength)])
         };
         var asses = new List<As> { TestData.CreateAs(routers: [TestData.CreateRouter(interfaces: interfaces)]) };
 

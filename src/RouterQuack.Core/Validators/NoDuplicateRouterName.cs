@@ -5,7 +5,7 @@ namespace RouterQuack.Core.Validators;
 /// <summary>
 /// Generate an error if there are duplicate router names.
 /// </summary>
-public class NoDuplicateRouterNames(ILogger<NoDuplicateRouterNames> logger, Context context) : IValidator
+public class NoDuplicateRouterName(ILogger<NoDuplicateRouterName> logger, Context context) : IValidator
 {
     public bool ErrorsOccurred { get; set; }
     public string BeginMessage => "Ensuring no routers with a common name exist";

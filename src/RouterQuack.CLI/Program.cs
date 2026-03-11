@@ -24,7 +24,8 @@ try
     // Execute validators
     Log.Information("Validating intent...");
     context.ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(NoDuplicateIpAddress)))
-        .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(NoDuplicateRouterNames)))
+        .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(NoDuplicateLoopbackAddress)))
+        .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(NoDuplicateRouterName)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(NoExternalRouterWithoutAddress)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(ValidBgpRelationships)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(ValidLoopbackAddresses)))
