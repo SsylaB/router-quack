@@ -14,14 +14,14 @@ public class GenerateLinkAddressesTests
     private readonly InterfaceUtils _interfaceUtils = new();
 
     [Test]
-    public async Task Process_LinkWithoutAddress_GeneratesAddresses()
+    public async Task Process_LinkWithoutAddress_GeneratesAddressesV4()
     {
         var (intf1, intf2) = CreateLinkedInterfaces();
         var asses = new List<As>
         {
             TestData.CreateAs(
-                networksSpaceV6: IPNetwork.Parse("2001:db8::/32"),
-                networksIpVersion: IpVersion.Ipv6,
+                networksSpaceV4: IPNetwork.Parse("192.168.1.0/24"),
+                networksIpVersion: IpVersion.Ipv4,
                 routers:
                 [
                     TestData.CreateRouter(name: "Router1", external: false, interfaces: [intf1]),
@@ -30,11 +30,13 @@ public class GenerateLinkAddressesTests
         };
 
         var context = ContextFactory.Create(asses: asses);
-        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils, _interfaceUtils);
+        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils);
         processor.Process();
 
-        await Assert.That(intf1.Addresses).Count().IsEqualTo(1);
-        await Assert.That(intf2.Addresses).Count().IsEqualTo(1);
+        await Assert.That(intf1.Ipv4Address).IsNotNull();
+        await Assert.That(intf2.Ipv4Address).IsNotNull();
+        await Assert.That(intf1.Ipv4Address!.NetworkAddress).IsEqualTo(intf2.Ipv4Address!.NetworkAddress);
+        await Assert.That(intf1.Ipv4Address!.IpAddress).IsNotEqualTo(intf2.Ipv4Address!.IpAddress);
         await Assert.That(processor.Context.ErrorsOccurred).IsFalse();
     }
 
@@ -56,7 +58,7 @@ public class GenerateLinkAddressesTests
         };
 
         var context = ContextFactory.Create(asses: asses);
-        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils, _interfaceUtils);
+        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils);
         processor.Process();
 
         await Assert.That(intf1.Addresses).Count().IsEqualTo(1);
@@ -82,7 +84,7 @@ public class GenerateLinkAddressesTests
         };
 
         var context = ContextFactory.Create(asses: asses);
-        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils, _interfaceUtils);
+        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils);
         processor.Process();
 
         await Assert.That(intf1.Addresses).Count().IsEqualTo(0);
@@ -113,7 +115,7 @@ public class GenerateLinkAddressesTests
         };
 
         var context = ContextFactory.Create(asses: asses);
-        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils, _interfaceUtils);
+        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils);
         processor.Process();
 
         await Assert.That(intf1.Addresses).Count().IsEqualTo(1);
@@ -138,38 +140,10 @@ public class GenerateLinkAddressesTests
         };
 
         var context = ContextFactory.Create(asses: asses);
-        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils, _interfaceUtils);
+        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils);
         processor.Process();
 
         await Assert.That(processor.Context.ErrorsOccurred).IsTrue();
-    }
-
-    [Test]
-    [DependsOn(nameof(Process_LinkWithoutAddress_GeneratesAddresses))]
-    public async Task Process_GeneratedAddressesShareNetwork()
-    {
-        var (intf1, intf2) = CreateLinkedInterfaces();
-        var asses = new List<As>
-        {
-            TestData.CreateAs(
-                networksSpaceV6: IPNetwork.Parse("2001:db8::/32"),
-                networksIpVersion: IpVersion.Ipv6,
-                routers:
-                [
-                    TestData.CreateRouter(name: "Router1", external: false, interfaces: [intf1]),
-                    TestData.CreateRouter(name: "Router2", external: false, interfaces: [intf2])
-                ])
-        };
-
-        var context = ContextFactory.Create(asses: asses);
-        var processor = new GenerateLinkAddresses(_logger, context, _networkUtils, _interfaceUtils);
-        processor.Process();
-
-        var addr1 = intf1.Addresses.First();
-        var addr2 = intf2.Addresses.First();
-
-        await Assert.That(addr1.NetworkAddress).IsEqualTo(addr2.NetworkAddress);
-        await Assert.That(addr1.IpAddress).IsNotEqualTo(addr2.IpAddress);
     }
 
     private static (Interface, Interface) CreateLinkedInterfaces(bool withValidLinkAddresses = false)
