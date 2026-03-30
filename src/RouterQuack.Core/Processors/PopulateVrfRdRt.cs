@@ -14,6 +14,7 @@ public class PopulateVrfRdRt(ILogger<PopulateVrfRdRt> logger, Context context) :
     {
         foreach (var @as in Context.Asses)
         {
+            var vrfIndexPerCeAs = new Dictionary<int, int>();
             // Collect all unique VRF names across all routers in this AS
             var vrfNames = @as.Routers
                 .SelectMany(r => r.Vrfs)
@@ -25,13 +26,32 @@ public class PopulateVrfRdRt(ILogger<PopulateVrfRdRt> logger, Context context) :
             {
                 foreach (var vrf in router.Vrfs)
                 {
-                    var vrfIndex = vrfNames.IndexOf(vrf.Name) + 1; // 1-based
-                    vrf.RouteDistinguisher ??= $"{@as.Number}:{vrfIndex}";
-                    if (vrf.ImportTargets == null || !vrf.ImportTargets.Any())
-                        vrf.ImportTargets = [$"{@as.Number}:{vrfIndex * 100}"];
+                    if (string.IsNullOrEmpty(vrf.RouteDistinguisher) ||
+                        vrf.ImportTargets is null or { Count: 0 } ||
+                        vrf.ExportTargets is null or { Count: 0 })
+                    {
+                        // Find the CE AS number: look for an interface bound to this VRF
+                        // and get the AS of its neighbour
+                        var ceAsNumber = router.Interfaces
+                                             .FirstOrDefault(i => i.Vrf == vrf.Name && i.Neighbour != null)
+                                             ?.Neighbour?.ParentRouter?.ParentAs?.Number
+                                         ?? @as.Number; // fallback to own AS if no CE found
 
-                    if (vrf.ExportTargets == null || !vrf.ExportTargets.Any())
-                        vrf.ExportTargets = [$"{@as.Number}:{vrfIndex * 100}"];
+                        vrfIndexPerCeAs.TryAdd(ceAsNumber, 1);
+                        var vrfIndex = vrfIndexPerCeAs[ceAsNumber];
+
+                        if (string.IsNullOrEmpty(vrf.RouteDistinguisher))
+                            vrf.RouteDistinguisher = $"{ceAsNumber}:{vrfIndex}";
+
+                        if (vrf.ImportTargets is null or { Count: 0 })
+                            vrf.ImportTargets = [$"{ceAsNumber}:{vrfIndex * 100}"];
+
+                        if (vrf.ExportTargets is null or { Count: 0 })
+                            vrf.ExportTargets = [$"{ceAsNumber}:{vrfIndex * 100}"];
+
+                        vrfIndexPerCeAs[ceAsNumber]++;
+                    }
+
                 }
             }
         }
