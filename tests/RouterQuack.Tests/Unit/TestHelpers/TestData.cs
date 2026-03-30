@@ -45,11 +45,13 @@ internal static class TestData
         IPAddress? loopbackAddressV6 = null,
         bool external = false,
         ICollection<Interface>? interfaces = null,
+        ICollection<Vrf>? vrfs = null,
         As? parentAs = null,
         bool useDefaultId = true,
         string? additionalConfig = null)
     {
         var interfaceList = interfaces?.ToList() ?? [];
+        var vrfList = vrfs?.ToList() ?? [];
 
         var router = new Router
         {
@@ -58,6 +60,7 @@ internal static class TestData
             Brand = brand,
             LoopbackAddressV4 = loopbackAddressV4,
             LoopbackAddressV6 = loopbackAddressV6,
+            Vrfs=vrfList,
             Bgp = new(),
             External = external,
             Interfaces = interfaceList,
