@@ -50,7 +50,7 @@ internal static class InterfacesConfig
     {
         builder.AppendLine($"interface {@interface.Name}");
         if (@interface.Vrf is not null)
-            builder.AppendLine($" vrf forwarding {@interface.Vrf}");  // ← must be before IP config
+            builder.AppendLine($" ip vrf forwarding {@interface.Vrf}");  // ← must be before IP config
         builder.AppendLine(InterfaceConfigStart);
 
         // IPv4
