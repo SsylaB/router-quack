@@ -1,4 +1,6 @@
+using System.Collections;
 using Microsoft.Extensions.Logging;
+using NeighbourInfo = RouterQuack.IO.Yaml.Models.NeighbourInfo;
 
 namespace RouterQuack.IO.Yaml.Parser;
 
@@ -23,9 +25,11 @@ public class YamlInterfaceMapper(ILogger<YamlInterfaceMapper> logger)
         {
             var dummyNeighbour = new Interface
             {
-                Name = value.Neighbour,
+                Name = key ?? string.Empty,
                 ParentRouter = parentRouter,
+                Bgp = BgpRelationship.None,
                 Neighbour = null,
+                AdditionalConfig = null,
                 Addresses = []
             };
 
@@ -38,7 +42,10 @@ public class YamlInterfaceMapper(ILogger<YamlInterfaceMapper> logger)
                 }
                 catch (ArgumentException e)
                 {
-                    LogInterfaceError(context, e.Message, dummyNeighbour);
+                    LogInterfaceError(context,
+                        $"Invalid address {address} ({e.Message})",
+                        parentRouter,
+                        key);
                 }
             }
 
@@ -46,9 +53,10 @@ public class YamlInterfaceMapper(ILogger<YamlInterfaceMapper> logger)
             {
                 Name = key,
                 Neighbour = dummyNeighbour, // Populate it now, will resolve it later in Step 1
-                ParentRouter = parentRouter,
-                Addresses = addresses,
                 Bgp = value.Bgp,
+                ParentRouter = parentRouter,
+                AdditionalConfig = value.AdditionalConfig,
+                Addresses = addresses,
                 Vrf = value.Vrf
             });
         }
@@ -56,11 +64,58 @@ public class YamlInterfaceMapper(ILogger<YamlInterfaceMapper> logger)
         return interfaces;
     }
 
-    private void LogInterfaceError(Context context, string message, Interface @interface)
+    private void LogInterfaceError(Context context, string message, Router parentRouter, string interfaceName)
     {
         logger.LogError(
-            "Interface {InterfaceName} of router {RouterName} in AS number {AsNumber}: {Message}.",
-            @interface.Name, @interface.ParentRouter.Name, @interface.ParentRouter.ParentAs.Number, message);
+            #pragma warning disable CA2254
+            "Interface {InterfaceName} of router {RouterName} in AS number {AsNumber}: " + message + '.',
+            interfaceName, parentRouter.Name, parentRouter.ParentAs.Number);
+        #pragma warning restore CA2254
         context.ApplyError();
+    }
+
+    private static NeighbourInfo? ParseNeighbour(object? neighbour, int defaultAs)
+    {
+        return neighbour switch
+        {
+            null => null,
+            string s => new(s, defaultAs),
+            IDictionary dict => ParseNeighbourFromDict(dict, defaultAs),
+            _ => null
+        };
+    }
+
+    private static NeighbourInfo? ParseNeighbourFromDict(IDictionary dict, int defaultAs)
+    {
+        var asNumber = defaultAs;
+        var router = string.Empty;
+        string? @interface = null;
+
+        foreach (DictionaryEntry kvp in dict)
+        {
+            var key = kvp.Key.ToString();
+            var val = kvp.Value?.ToString();
+
+            switch (key)
+            {
+                case "as":
+                    if (int.TryParse(val, out var parsed))
+                        asNumber = parsed;
+                    break;
+
+                case "router":
+                    router = val ?? string.Empty;
+                    break;
+
+                case "interface":
+                    @interface = val;
+                    break;
+
+                default:
+                    return null;
+            }
+        }
+
+        return new(asNumber, router, @interface);
     }
 }

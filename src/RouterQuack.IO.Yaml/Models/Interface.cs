@@ -12,5 +12,7 @@ public class Interface
 
     public ICollection<string>? Addresses { get; init; }
 
+    public string? AdditionalConfig { get; init; }
+
     public string? Vrf { get; init; }
 }

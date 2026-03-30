@@ -19,6 +19,8 @@ public class Router
 
     public bool? External { get; init; }
 
+    public string? AdditionalConfig { get; init; }
+
     public IDictionary<string, Vrf>? Vrfs { get; init; }
 
     public required IDictionary<string, Interface> Interfaces { get; init; }

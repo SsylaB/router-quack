@@ -10,13 +10,15 @@ public sealed class Interface
     // It will be used to resolve the actual neighbour interface starting from the collection of ASs
     public required Interface? Neighbour { get; set; }
 
-    public BgpRelationship Bgp { get; init; } = BgpRelationship.None;
+    public required BgpRelationship Bgp { get; init; } = BgpRelationship.None;
 
     public Address? Ipv4Address { get; set; }
 
     public Address? Ipv6Address { get; set; }
 
     public required ICollection<Address> Addresses { get; init; }
+
+    public required string? AdditionalConfig { get; init; }
 
     public required Router ParentRouter { get; init; }
 

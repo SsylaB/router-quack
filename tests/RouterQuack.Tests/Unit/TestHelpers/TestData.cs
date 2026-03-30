@@ -5,7 +5,7 @@ namespace RouterQuack.Tests.Unit.TestHelpers;
 
 internal static class TestData
 {
-    private static readonly RouterUtils RouterUtils = new RouterUtils();
+    private static readonly RouterUtils RouterUtils = new();
 
     internal static As CreateAs(
         int number = 1,
@@ -47,7 +47,8 @@ internal static class TestData
         ICollection<Interface>? interfaces = null,
         ICollection<Vrf>? vrfs = null,
         As? parentAs = null,
-        bool useDefaultId = true)
+        bool useDefaultId = true,
+        string? additionalConfig = null)
     {
         var interfaceList = interfaces?.ToList() ?? [];
         var vrfList = vrfs?.ToList() ?? [];
@@ -63,7 +64,8 @@ internal static class TestData
             Bgp = new(),
             External = external,
             Interfaces = interfaceList,
-            ParentAs = parentAs!
+            ParentAs = parentAs!,
+            AdditionalConfig = additionalConfig
         };
 
         if (useDefaultId)
@@ -80,7 +82,8 @@ internal static class TestData
         Interface? neighbour = null,
         BgpRelationship bgp = BgpRelationship.None,
         ICollection<Address>? addresses = null,
-        Router? parentRouter = null)
+        Router? parentRouter = null,
+        string? additionalConfig = null)
     {
         return new()
         {
@@ -88,7 +91,8 @@ internal static class TestData
             Neighbour = neighbour,
             Bgp = bgp,
             Addresses = addresses?.ToList() ?? [],
-            ParentRouter = parentRouter!
+            ParentRouter = parentRouter!,
+            AdditionalConfig = additionalConfig
         };
     }
 
