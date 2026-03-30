@@ -5,7 +5,7 @@ namespace RouterQuack.IO.Yaml.Models;
 
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-public class Router
+public sealed class Router
 {
     public IPAddress? Id { get; init; }
 
@@ -21,8 +21,7 @@ public class Router
 
     public string? AdditionalConfig { get; init; }
 
-    public required IDictionary<string, YamlInterface> Interfaces { get; init; }
-
     public IDictionary<string, Vrf>? Vrfs { get; init; }
 
+    public required IDictionary<string, Interface> Interfaces { get; init; }
 }

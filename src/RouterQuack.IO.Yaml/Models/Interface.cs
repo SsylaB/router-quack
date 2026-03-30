@@ -4,9 +4,9 @@ namespace RouterQuack.IO.Yaml.Models;
 
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-public sealed class Interface
+public class Interface
 {
-    public required object Neighbour { get; init; }
+    public required string Neighbour { get; init; }
 
     public BgpRelationship Bgp { get; init; } = BgpRelationship.None;
 
