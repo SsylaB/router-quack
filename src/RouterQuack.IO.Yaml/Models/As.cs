@@ -23,8 +23,6 @@ public sealed class As
 
     public DeployInfo? Deploy { get; init; }
 
-    public DeployInfo? Deploy { get; init; }
-
     public bool External { get; init; } = false;
 
     public required IDictionary<string, YamlRouter> Routers { get; init; }
