@@ -85,6 +85,7 @@ public static class DependencyInjection
             .AddKeyedSingleton<IProcessor, GenerateLinkAddresses>(nameof(GenerateLinkAddresses))
             .AddKeyedSingleton<IProcessor, GenerateLoopbackAddresses>(nameof(GenerateLoopbackAddresses))
             .AddKeyedSingleton<IProcessor, PopulateRouterIds>(nameof(PopulateRouterIds))
+            .AddKeyedSingleton<IProcessor, PopulateVrfRdRt>(nameof(PopulateVrfRdRt))
             .AddKeyedSingleton<IProcessor, ToggleIbgp>(nameof(ToggleIbgp));
 
         builder.Services
