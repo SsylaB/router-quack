@@ -83,7 +83,8 @@ internal static class TestData
         BgpRelationship bgp = BgpRelationship.None,
         ICollection<Address>? addresses = null,
         Router? parentRouter = null,
-        string? additionalConfig = null)
+        string? additionalConfig = null,
+        string? vrf = null)
     {
         return new()
         {
@@ -92,7 +93,8 @@ internal static class TestData
             Bgp = bgp,
             Addresses = addresses?.ToList() ?? [],
             ParentRouter = parentRouter!,
-            AdditionalConfig = additionalConfig
+            AdditionalConfig = additionalConfig,
+            Vrf = vrf
         };
     }
 

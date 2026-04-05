@@ -18,10 +18,10 @@ internal static class VrfConfig
             builder.AppendLine($" rd {vrf.RouteDistinguisher}");
 
             foreach (var rt in vrf.ImportTargets ?? [])
-                builder.AppendLine($"  route-target import {rt}");
+                builder.AppendLine($" route-target import {rt}");
 
             foreach (var rt in vrf.ExportTargets ?? [])
-                builder.AppendLine($"  route-target export {rt}");
+                builder.AppendLine($" route-target export {rt}");
             builder.AppendLine("!");
         }
     }

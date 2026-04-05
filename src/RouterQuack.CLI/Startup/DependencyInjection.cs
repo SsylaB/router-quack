@@ -78,7 +78,9 @@ public static class DependencyInjection
             .AddKeyedSingleton<IValidator, ValidLoopbackAddresses>(nameof(ValidLoopbackAddresses))
             .AddKeyedSingleton<IValidator, ValidLoopbackSpaces>(nameof(ValidLoopbackSpaces))
             .AddKeyedSingleton<IValidator, ValidNetworkSpaces>(nameof(ValidNetworkSpaces))
+            .AddKeyedSingleton<IValidator, ValidVrfReferences>(nameof(ValidVrfReferences))
             .AddKeyedSingleton<IValidator, WarningWhenAdditionalConfig>(nameof(WarningWhenAdditionalConfig));
+
 
         builder.Services
             .AddKeyedSingleton<IProcessor, ResolveNeighbours>(nameof(ResolveNeighbours))
