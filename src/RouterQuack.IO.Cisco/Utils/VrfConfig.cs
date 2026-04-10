@@ -1,5 +1,6 @@
 using System.Text;
 using RouterQuack.Core.Models;
+using Router = RouterQuack.Core.Models.Router;
 
 namespace RouterQuack.IO.Cisco.Utils;
 
@@ -14,14 +15,33 @@ internal static class VrfConfig
 
         foreach (var vrf in router.Vrfs)
         {
-            builder.AppendLine($"ip vrf {vrf.Name}");
+            builder.AppendLine($"vrf definition {vrf.Name}");
             builder.AppendLine($" rd {vrf.RouteDistinguisher}");
 
-            foreach (var rt in vrf.ImportTargets ?? [])
-                builder.AppendLine($" route-target import {rt}");
+            // address-family ipv4
+            if (vrf.AddressFamilies.Contains(VrfAddressFamily.Ipv4))
+            {
+                builder.AppendLine(" !");
+                builder.AppendLine(" address-family ipv4");
+                foreach (var rt in vrf.ImportTargets ?? [])
+                    builder.AppendLine($"  route-target import {rt}");
+                foreach (var rt in vrf.ExportTargets ?? [])
+                    builder.AppendLine($"  route-target export {rt}");
+                builder.AppendLine("  exit-address-family");
+            }
 
-            foreach (var rt in vrf.ExportTargets ?? [])
-                builder.AppendLine($" route-target export {rt}");
+            // address-family ipv6
+            if (vrf.AddressFamilies.Contains(VrfAddressFamily.Ipv6))
+            {
+                builder.AppendLine(" !");
+                builder.AppendLine(" address-family ipv6");
+                foreach (var rt in vrf.ImportTargets ?? [])
+                    builder.AppendLine($"  route-target import {rt}");
+                foreach (var rt in vrf.ExportTargets ?? [])
+                    builder.AppendLine($"  route-target export {rt}");
+                builder.AppendLine("  exit-address-family");
+            }
+
             builder.AppendLine("!");
         }
     }

@@ -19,4 +19,9 @@ public sealed class Vrf
 
     /// <summary>Route targets to export from this VRF.</summary>
     public ICollection<string>? ExportTargets { get; set; }
+
+    public IReadOnlySet<VrfAddressFamily> AddressFamilies { get; init; }
+        = new HashSet<VrfAddressFamily> { VrfAddressFamily.Ipv4 };
 }
+
+public enum VrfAddressFamily { Ipv4, Ipv6 }
