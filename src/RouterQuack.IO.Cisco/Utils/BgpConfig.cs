@@ -240,6 +240,16 @@ internal static class BgpConfig
     {
         foreach (var group in vrfEbgpGroups)
         {
+            // Only emit if the VRF is actually configured for IPv6
+            var vrf = router.Vrfs.FirstOrDefault(v => v.Name == group.Key);
+            if (vrf is null || !vrf.AddressFamilies.Contains(VrfAddressFamily.Ipv6))
+                continue;
+
+            // Only emit if at least one neighbour actually has an IPv6 address
+            var hasAnyV6Neighbour = group.Any(i => i.Neighbour?.Ipv6Address is not null);
+            if (!hasAnyV6Neighbour)
+                continue;
+            
             builder.AppendLine(" !");
             builder.AppendLine($" address-family ipv6 vrf {group.Key}");
 
