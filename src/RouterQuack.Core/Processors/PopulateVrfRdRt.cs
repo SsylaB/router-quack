@@ -25,33 +25,34 @@ public class PopulateVrfRdRt(ILogger<PopulateVrfRdRt> logger, Context context) :
                 .Select((name, i) => (name, index: i + 1))
                 .ToDictionary(x => x.name, x => x.index);
 
+            // One counter per CE ASN, each starting at 1
+            var rdCounterByCeAsn = new Dictionary<long, int>();
+
             foreach (var router in @as.Routers)
             {
                 foreach (var vrf in router.Vrfs)
                 {
-                    if (string.IsNullOrEmpty(vrf.RouteDistinguisher) ||
-                        vrf.ImportTargets is null or { Count: 0 } ||
-                        vrf.ExportTargets is null or { Count: 0 })
+                    var ceAsNumber = router.Interfaces
+                                         .FirstOrDefault(i => i.Vrf == vrf.Name && i.Neighbour != null)
+                                         ?.Neighbour?.ParentRouter?.ParentAs?.Number
+                                     ?? @as.Number;
+
+                    var rtIndex = vrfIndexByName[vrf.Name];
+
+                    if (string.IsNullOrEmpty(vrf.RouteDistinguisher))
                     {
-                        // Find the CE AS number: look for an interface bound to this VRF
-                        // and get the AS of its neighbour
-                        var ceAsNumber = router.Interfaces
-                            .FirstOrDefault(i => i.Vrf == vrf.Name && i.Neighbour != null)
-                            ?.Neighbour?.ParentRouter?.ParentAs?.Number
-                            ?? @as.Number;
+                        if (!rdCounterByCeAsn.TryGetValue(ceAsNumber, out var counter))
+                            counter = 0;
+                        rdCounterByCeAsn[ceAsNumber] = ++counter;
 
-                        var vrfIndex = vrfIndexByName[vrf.Name];
-
-                        if (string.IsNullOrEmpty(vrf.RouteDistinguisher))
-                            vrf.RouteDistinguisher = $"{ceAsNumber}:{vrfIndex}";
-
-                        if (vrf.ImportTargets is null or { Count: 0 })
-                            vrf.ImportTargets = [$"{ceAsNumber}:{vrfIndex * 100}"];
-
-                        if (vrf.ExportTargets is null or { Count: 0 })
-                            vrf.ExportTargets = [$"{ceAsNumber}:{vrfIndex * 100}"];
+                        vrf.RouteDistinguisher = $"{ceAsNumber}:{counter}";
                     }
 
+                    if (vrf.ImportTargets is null or { Count: 0 })
+                        vrf.ImportTargets = [$"{ceAsNumber}:{rtIndex * 100}"];
+
+                    if (vrf.ExportTargets is null or { Count: 0 })
+                        vrf.ExportTargets = [$"{ceAsNumber}:{rtIndex * 100}"];
                 }
             }
         }
