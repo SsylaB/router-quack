@@ -40,7 +40,7 @@ internal static class BgpConfig
         List<string> ipv4AddressFamily = [];
         List<string> ipv6AddressFamily = [];
 
-        ConfigureEbgp(builder, ebgpNeighbours, ipv4AddressFamily, ipv6AddressFamily);
+        ConfigureEbgp(builder, plainEbgpNeighbours, ipv4AddressFamily, ipv6AddressFamily);
         ConfigureIbgp(builder, ibgpNeighbours, router, ipv4AddressFamily, ipv6AddressFamily);
         ConfigureNetworks(router, ipv4AddressFamily, ipv6AddressFamily);
         WriteAddressFamilies(builder, ipv4AddressFamily, ipv6AddressFamily);

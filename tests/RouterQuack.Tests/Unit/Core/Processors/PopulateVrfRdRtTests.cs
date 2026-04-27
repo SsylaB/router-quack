@@ -83,7 +83,7 @@ public class PopulateVrfRdRtTests
     }
 
     [Test]
-    public async Task Process_SameVrfNameAcrossRouters_GetsSameIndex()
+    public async Task Process_SameVrfNameAcrossRouters_GetsDifferentRds()
     {
         var vrf1 = CreateVrf("CUSTOMER_A");
         var vrf2 = CreateVrf("CUSTOMER_A");
@@ -94,9 +94,26 @@ public class PopulateVrfRdRtTests
         var context = ContextFactory.Create(asses: asses);
         new PopulateVrfRdRt(_logger, context).Process();
 
-        // Same VRF name → same index → same RD on both routers
+        // Each VRF instance gets a unique RD
         await Assert.That(vrf1.RouteDistinguisher).IsEqualTo("111:1");
-        await Assert.That(vrf2.RouteDistinguisher).IsEqualTo("111:1");
+        await Assert.That(vrf2.RouteDistinguisher).IsEqualTo("111:2");
+    }
+
+    [Test]
+    public async Task Process_SameVrfNameAcrossRouters_GetsSameRt()
+    {
+        var vrf1 = CreateVrf("CUSTOMER_A");
+        var vrf2 = CreateVrf("CUSTOMER_A");
+        var r1 = TestData.CreateRouter(name: "R1", vrfs: [vrf1]);
+        var r2 = TestData.CreateRouter(name: "R2", vrfs: [vrf2]);
+        var asses = new List<As> { TestData.CreateAs(number: 111, routers: [r1, r2]) };
+
+        var context = ContextFactory.Create(asses: asses);
+        new PopulateVrfRdRt(_logger, context).Process();
+
+        // Same VRF name → same RT index → same RT on both routers
+        await Assert.That(vrf1.ImportTargets).Contains("111:100");
+        await Assert.That(vrf2.ImportTargets).Contains("111:100");
     }
 
     [Test]

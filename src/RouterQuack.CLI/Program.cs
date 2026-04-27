@@ -34,7 +34,6 @@ try
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(ValidLoopbackSpaces)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(ValidNetworkSpaces)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(ValidVrfReferences)))
-        .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(WarningWhenAdditionalConfig)));
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(WarningWhenAdditionalConfig)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(Ipv4SetWhenLdpIs)));
 
