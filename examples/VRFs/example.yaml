@@ -7,11 +7,11 @@
 # CEs are external routers in their own ASes.
 
 111:
-  igp: "mpls"
+  core: "LDP"
   brand: "cisco"
   loopback_space_v4: "10.0.0.0/29"
   networks_space_v4: "192.168.1.0/24"
-  networks: "IPv4"
+  address_family: "IPv4"
   routers:
     PE1:
       loopback_v4: "10.0.0.1"
@@ -100,7 +100,7 @@
     gns3:
       server: "http://localhost:3080"
       project: "Quack-mpls"
-  networks: "IPv4"
+  address_family: "IPv4"
   brand: "cisco"
   loopback_space_v4: "10.0.1.0/30"
   networks_space_v4: "192.168.2.0/24"
@@ -127,7 +127,7 @@
     gns3:
       server: "http://localhost:3080"
       project: "Quack-mpls"
-  networks: "IPv4"
+  address_family: "IPv4"
   brand: "cisco"
   loopback_space_v4: "10.0.2.0/30"
   networks_space_v4: "192.168.3.0/24"
