@@ -45,8 +45,7 @@ internal static class BgpConfig
         ConfigureNetworks(router, ipv4AddressFamily, ipv6AddressFamily);
         WriteAddressFamilies(builder, ipv4AddressFamily, ipv6AddressFamily);
         WriteVpnv4AddressFamily(builder, ibgpNeighbours, vrfEbgpGroups);
-        WriteVrfAddressFamilies(builder, ibgpNeighbours,vrfEbgpGroups, router);
-        WriteVpnv6AddressFamily(builder, ibgpNeighbours, vrfEbgpGroups, router);
+        WriteVrfAddressFamilies(builder,vrfEbgpGroups, router);
         WriteVrfIpv6AddressFamilies(builder, vrfEbgpGroups, router);
 
         builder.AppendLine("!\n!");
@@ -129,6 +128,10 @@ internal static class BgpConfig
             else
                 ipv6AddressFamily.Add($"  network {network.BaseAddress}/{network.PrefixLength}");
         }
+
+        // If no networks declared, auto-advertise the loopback
+        if (router.Bgp.Networks.Length == 0 && router.LoopbackAddressV4 is not null)
+            ipv4AddressFamily.Add($"  network {router.LoopbackAddressV4} mask 255.255.255.255");
     }
 
     private static void WriteAddressFamilies(StringBuilder builder,
@@ -179,60 +182,31 @@ internal static class BgpConfig
     /// containing the CE neighbour declarations for that VRF.
     /// </summary>
     private static void WriteVrfAddressFamilies(StringBuilder builder,
-        Router[] ibgpNeighbours,
         IGrouping<string, Interface>[] vrfEbgpGroups,
         Router router)
     {
-        // Only emit if this PE has at least one IPv6-capable VRF
-        var hasIpv6Vrf = vrfEbgpGroups.Any(g =>
-            router.Vrfs.FirstOrDefault(v => v.Name == g.Key)
-                ?.AddressFamilies.Contains(VrfAddressFamily.Ipv6) == true);
-
-        if (!hasIpv6Vrf || ibgpNeighbours.Length == 0)
-            return;
-
-        builder.AppendLine(" !");
-        builder.AppendLine(" address-family vpnv6");
-
-        foreach (var neighbour in ibgpNeighbours)
+        foreach (var group in vrfEbgpGroups)
         {
-            // 6VPE uses IPv4 loopback for the iBGP session (RFC 4659)
-            var addressV4 = neighbour.LoopbackAddressV4;
-            if (addressV4 is null) continue;
+            var vrf = router.Vrfs.FirstOrDefault(v => v.Name == group.Key);
+            if (vrf is null) continue;
 
-            builder.AppendLine($"  neighbor {addressV4} activate");
-            builder.AppendLine($"  neighbor {addressV4} send-community extended");
+            builder.AppendLine(" !");
+            builder.AppendLine($" address-family ipv4 vrf {group.Key}");
+
+            foreach (var iface in group)
+            {
+                var neighbour = iface.Neighbour!;
+                var addressV4 = neighbour.Ipv4Address?.IpAddress;
+                if (addressV4 is null) continue;
+
+                builder.AppendLine($"  neighbor {addressV4} remote-as {neighbour.ParentRouter.ParentAs.Number}");
+                builder.AppendLine($"  neighbor {addressV4} activate");
+                builder.AppendLine($"  neighbor {addressV4} as-override"); // needed for CE-to-CE same-AS scenarios
+                // TODO : remove as-override and find a solution for same-as CEs, because it breaks path selection
+            }
+
+            builder.AppendLine("  exit-address-family");
         }
-
-        builder.AppendLine("  exit-address-family");
-    }
-    private static void WriteVpnv6AddressFamily(StringBuilder builder,
-        Router[] ibgpNeighbours,
-        IGrouping<string, Interface>[] vrfEbgpGroups,
-        Router router)
-    {
-        // Only emit if this PE has at least one IPv6-capable VRF
-        var hasIpv6Vrf = vrfEbgpGroups.Any(g =>
-            router.Vrfs.FirstOrDefault(v => v.Name == g.Key)
-                ?.AddressFamilies.Contains(VrfAddressFamily.Ipv6) == true);
-
-        if (!hasIpv6Vrf || ibgpNeighbours.Length == 0)
-            return;
-
-        builder.AppendLine(" !");
-        builder.AppendLine(" address-family vpnv6");
-
-        foreach (var neighbour in ibgpNeighbours)
-        {
-            // 6VPE uses IPv4 loopback for the iBGP session (RFC 4659)
-            var addressV4 = neighbour.LoopbackAddressV4;
-            if (addressV4 is null) continue;
-
-            builder.AppendLine($"  neighbor {addressV4} activate");
-            builder.AppendLine($"  neighbor {addressV4} send-community extended");
-        }
-
-        builder.AppendLine("  exit-address-family");
     }
     private static void WriteVrfIpv6AddressFamilies(StringBuilder builder,
         IGrouping<string, Interface>[] vrfEbgpGroups,
@@ -249,7 +223,7 @@ internal static class BgpConfig
             var hasAnyV6Neighbour = group.Any(i => i.Neighbour?.Ipv6Address is not null);
             if (!hasAnyV6Neighbour)
                 continue;
-            
+
             builder.AppendLine(" !");
             builder.AppendLine($" address-family ipv6 vrf {group.Key}");
 
