@@ -35,11 +35,12 @@ public class GenerateLinkAddresses(
             var addresses = GetLinkNetworks(link).ToArray();
 
             // If we need to generate IPv4 link addresses
-            if ((link.Item1.ParentRouter.ParentAs.IpVersions & IpVersion.IPv4) == IpVersion.IPv4
-                || (link.Item2.ParentRouter.ParentAs.IpVersions & IpVersion.IPv4) == IpVersion.IPv4)
+            if (link.Item1.ParentRouter.ParentAs.AddressFamily.HasFlag(IpVersion.IPv4)
+                || link.Item2.ParentRouter.ParentAs.AddressFamily.HasFlag(IpVersion.IPv4))
             {
                 var ipv4Addresses = addresses.Where(a
                     => a.address.NetworkAddress.BaseAddress.AddressFamily == AddressFamily.InterNetwork).ToArray();
+
                 switch (ipv4Addresses.Length)
                 {
                     case 0:
@@ -60,11 +61,17 @@ public class GenerateLinkAddresses(
             }
 
             // If we need to generate IPv6 link addresses
-            if ((link.Item1.ParentRouter.ParentAs.IpVersions & IpVersion.IPv6) == IpVersion.IPv6
-                || (link.Item2.ParentRouter.ParentAs.IpVersions & IpVersion.IPv6) == IpVersion.IPv6)
+            if (link.Item1.ParentRouter.ParentAs.AddressFamily.HasFlag(IpVersion.IPv6)
+                || link.Item2.ParentRouter.ParentAs.AddressFamily.HasFlag(IpVersion.IPv6))
             {
+                // Skip if this is an MPLS core link
+                if (link.Item1.ParentRouter.ParentAs == link.Item2.ParentRouter.ParentAs
+                    && link.Item1.ParentRouter.ParentAs.Core == CoreType.LDP)
+                    continue;
+
                 var ipv6Addresses = addresses.Where(a
                     => a.address.NetworkAddress.BaseAddress.AddressFamily == AddressFamily.InterNetworkV6).ToArray();
+
                 switch (ipv6Addresses.Length)
                 {
                     case 0:
@@ -183,7 +190,7 @@ public class GenerateLinkAddresses(
                 when link.Item1.Addresses.Any(a => a.IpAddress.AddressFamily == AddressFamily.InterNetwork):
             {
                 // Generate warning only if an IPv6 address has been or will be generated
-                var logLevel = link.Item1.ParentRouter is { External: false, ParentAs.IpVersions: BothVersions }
+                var logLevel = link.Item1.ParentRouter is { External: false, ParentAs.AddressFamily: BothVersions }
                     ? LogLevel.Warning
                     : LogLevel.Error;
                 this.Log(link.Item1, "Already has an IPv4 address", logLevel: logLevel);
@@ -193,7 +200,7 @@ public class GenerateLinkAddresses(
             case AddressFamily.InterNetwork
                 when link.Item2.Addresses.Any(a => a.IpAddress.AddressFamily == AddressFamily.InterNetwork):
             {
-                var logLevel = link.Item2.ParentRouter is { External: false, ParentAs.IpVersions: BothVersions }
+                var logLevel = link.Item2.ParentRouter is { External: false, ParentAs.AddressFamily: BothVersions }
                     ? LogLevel.Warning
                     : LogLevel.Error;
                 this.Log(link.Item2, "Already has an IPv4 address", logLevel: logLevel);

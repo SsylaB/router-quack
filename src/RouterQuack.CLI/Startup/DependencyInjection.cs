@@ -80,6 +80,8 @@ public static class DependencyInjection
             .AddKeyedSingleton<IValidator, ValidNetworkSpaces>(nameof(ValidNetworkSpaces))
             .AddKeyedSingleton<IValidator, ValidVrfReferences>(nameof(ValidVrfReferences))
             .AddKeyedSingleton<IValidator, WarningWhenAdditionalConfig>(nameof(WarningWhenAdditionalConfig));
+            .AddKeyedSingleton<IValidator, WarningWhenAdditionalConfig>(nameof(WarningWhenAdditionalConfig))
+            .AddKeyedSingleton<IValidator, Ipv4SetWhenLdpIs>(nameof(Ipv4SetWhenLdpIs));
 
 
         builder.Services

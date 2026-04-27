@@ -35,6 +35,8 @@ try
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(ValidNetworkSpaces)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(ValidVrfReferences)))
         .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(WarningWhenAdditionalConfig)));
+        .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(WarningWhenAdditionalConfig)))
+        .ExecuteStep(di.GetRequiredKeyedService<IValidator>(nameof(Ipv4SetWhenLdpIs)));
 
     // Execute other processors
     context.ExecuteStep(di.GetRequiredKeyedService<IProcessor>(nameof(GenerateLinkAddresses)))
@@ -51,7 +53,7 @@ try
     }
 
     // Write config files to output folder
-    Log.Information("Generating config files...");
+    Log.Information("Generating configuration files...");
 
     if (!Directory.Exists(context.OutputDirectoryPath))
     {
@@ -62,6 +64,7 @@ try
     context.ExecuteStep(di.GetRequiredKeyedService<IConfigFileWriter>(RouterBrand.Cisco));
 
     // Deploy configurations to GNS3 if any AS has "deploy" info
+    Log.Information("Deploying configurations...");
     context.ExecuteStep(di.GetRequiredService<IConfigDeployer>());
 
     Log.Information("Processing complete.");

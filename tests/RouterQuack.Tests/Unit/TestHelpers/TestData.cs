@@ -9,7 +9,8 @@ internal static class TestData
 
     internal static As CreateAs(
         int number = 1,
-        IgpType igp = IgpType.iBGP,
+        IgpType igp = IgpType.OSPF,
+        CoreType core = CoreType.None,
         IPNetwork? loopbackSpaceV4 = null,
         IPNetwork? loopbackSpaceV6 = null,
         IPNetwork? networksSpaceV4 = null,
@@ -23,11 +24,12 @@ internal static class TestData
         {
             Number = number,
             Igp = igp,
+            Core = core,
             LoopbackSpaceV4 = loopbackSpaceV4,
             LoopbackSpaceV6 = loopbackSpaceV6,
             NetworksSpaceV4 = networksSpaceV4,
             NetworksSpaceV6 = networksSpaceV6,
-            IpVersions = ipVersion,
+            AddressFamily = ipVersion,
             Routers = routerList
         };
 
@@ -43,6 +45,7 @@ internal static class TestData
         RouterBrand brand = RouterBrand.Cisco,
         IPAddress? loopbackAddressV4 = null,
         IPAddress? loopbackAddressV6 = null,
+        BgpConfig? bgp = null,
         bool external = false,
         ICollection<Interface>? interfaces = null,
         ICollection<Vrf>? vrfs = null,
@@ -61,7 +64,7 @@ internal static class TestData
             LoopbackAddressV4 = loopbackAddressV4,
             LoopbackAddressV6 = loopbackAddressV6,
             Vrfs=vrfList,
-            Bgp = new(),
+            Bgp = bgp ?? new(),
             External = external,
             Interfaces = interfaceList,
             ParentAs = parentAs!,

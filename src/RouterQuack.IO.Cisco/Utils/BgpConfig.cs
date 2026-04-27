@@ -40,8 +40,8 @@ internal static class BgpConfig
         List<string> ipv4AddressFamily = [];
         List<string> ipv6AddressFamily = [];
 
-        ConfigureEbgp(builder, plainEbgpNeighbours, ipv4AddressFamily, ipv6AddressFamily);
-        ConfigureIbgp(builder, ibgpNeighbours, ipv4AddressFamily, ipv6AddressFamily);
+        ConfigureEbgp(builder, ebgpNeighbours, ipv4AddressFamily, ipv6AddressFamily);
+        ConfigureIbgp(builder, ibgpNeighbours, router, ipv4AddressFamily, ipv6AddressFamily);
         ConfigureNetworks(router, ipv4AddressFamily, ipv6AddressFamily);
         WriteAddressFamilies(builder, ipv4AddressFamily, ipv6AddressFamily);
         WriteVpnv4AddressFamily(builder, ibgpNeighbours, vrfEbgpGroups);
@@ -67,27 +67,47 @@ internal static class BgpConfig
     {
         foreach (var neighbour in neighbours)
         {
-            var addressV4 = neighbour.Ipv4Address?.IpAddress;
-
-            if (addressV4 is not null)
+            if (neighbour.Ipv4Address is not null)
             {
-                builder.AppendLine($" neighbor {addressV4} remote-as {neighbour.ParentRouter.ParentAs.Number}");
-                ipv4AddressFamily.Add($"  neighbor {addressV4} activate");
+                builder.AppendLine(
+                    $" neighbor {neighbour.Ipv4Address.IpAddress} " + $"remote-as {neighbour.AsNumber()}");
+                builder.AppendLine($" neighbor {neighbour.Ipv4Address.IpAddress} send-community both");
+                ipv4AddressFamily.Add($"  neighbor {neighbour.Ipv4Address.IpAddress} activate");
+
+                ipv4AddressFamily.Add($"  neighbor {neighbour.Ipv4Address.IpAddress} " +
+                                      $"route-map {BgpPolicyConfig.GetInboundRouteMapName(neighbour.Neighbour!.Bgp,
+                                          neighbour.AsNumber(),
+                                          neighbour.ParentRouter.Name)} in");
+
+                ipv4AddressFamily.Add($"  neighbor {neighbour.Ipv4Address.IpAddress} " +
+                                      $"route-map {BgpPolicyConfig.GetOutboundRouteMapName(neighbour.Neighbour!.Bgp,
+                                          neighbour.AsNumber(),
+                                          neighbour.ParentRouter.Name)} out");
             }
 
-            var addressV6 = neighbour.Ipv6Address?.IpAddress;
-
             // ReSharper disable once InvertIf
-            if (addressV6 is not null)
+            if (neighbour.Ipv6Address is not null)
             {
-                builder.AppendLine($" neighbor {addressV6} remote-as {neighbour.ParentRouter.ParentAs.Number}");
-                ipv6AddressFamily.Add($"  neighbor {addressV6} activate");
+                builder.AppendLine($" neighbor {neighbour.Ipv6Address.IpAddress} remote-as {neighbour.AsNumber()}");
+                builder.AppendLine($" neighbor {neighbour.Ipv6Address.IpAddress} send-community both");
+                ipv6AddressFamily.Add($"  neighbor {neighbour.Ipv6Address.IpAddress} activate");
+
+                ipv6AddressFamily.Add($"  neighbor {neighbour.Ipv6Address.IpAddress} " +
+                                      $"route-map {BgpPolicyConfig.GetInboundRouteMapName(neighbour.Neighbour!.Bgp,
+                                          neighbour.AsNumber(),
+                                          neighbour.ParentRouter.Name)} in");
+
+                ipv6AddressFamily.Add($"  neighbor {neighbour.Ipv6Address.IpAddress} " +
+                                      $"route-map {BgpPolicyConfig.GetOutboundRouteMapName(neighbour.Neighbour!.Bgp,
+                                          neighbour.AsNumber(),
+                                          neighbour.ParentRouter.Name)} out");
             }
         }
     }
 
     private static void ConfigureIbgp(StringBuilder builder,
         Router[] neighbours,
+        Router router,
         in List<string> ipv4AddressFamily,
         in List<string> ipv6AddressFamily)
     {
@@ -99,8 +119,17 @@ internal static class BgpConfig
             {
                 builder.AppendLine($" neighbor {addressV4} remote-as {neighbour.ParentAs.Number}");
                 builder.AppendLine($" neighbor {addressV4} update-source Loopback0");
+                builder.AppendLine($" neighbor {addressV4} send-community both");
                 ipv4AddressFamily.Add($"  neighbor {addressV4} activate");
                 ipv4AddressFamily.Add($"  neighbor {addressV4} next-hop-self");
+
+                // 6PE for the win
+                if (router.ParentAs.Core == CoreType.LDP && router.ParentAs.AddressFamily.HasFlag(IpVersion.IPv6))
+                {
+                    ipv6AddressFamily.Add($"  neighbor {addressV4} activate");
+                    ipv6AddressFamily.Add($"  neighbor {addressV4} next-hop-self");
+                    ipv6AddressFamily.Add($"  neighbor {addressV4} send-label");
+                }
             }
 
             var addressV6 = neighbour.LoopbackAddressV6;
@@ -110,6 +139,7 @@ internal static class BgpConfig
             {
                 builder.AppendLine($" neighbor {addressV6} remote-as {neighbour.ParentAs.Number}");
                 builder.AppendLine($" neighbor {addressV6} update-source Loopback0");
+                builder.AppendLine($" neighbor {addressV6} send-community both");
                 ipv6AddressFamily.Add($"  neighbor {addressV6} activate");
                 ipv6AddressFamily.Add($"  neighbor {addressV6} next-hop-self");
             }
@@ -123,10 +153,14 @@ internal static class BgpConfig
         foreach (var network in router.Bgp.Networks)
         {
             if (network.BaseAddress.AddressFamily == AddressFamily.InterNetwork)
-                ipv4AddressFamily.Add($"  network {network.BaseAddress} mask " +
-                                      $"{Ipv4AddressUtils.GetV4Mask(network.PrefixLength)}");
+                ipv4AddressFamily.Add($"  network {network.BaseAddress} " +
+                                      $"mask {Ipv4AddressUtils.GetV4Mask(network.PrefixLength)} " +
+                                      $"route-map {BgpPolicyConfig.SetLocalRouteMapName}");
             else
-                ipv6AddressFamily.Add($"  network {network.BaseAddress}/{network.PrefixLength}");
+            {
+                ipv6AddressFamily.Add($"  network {network.BaseAddress}/{network.PrefixLength} " +
+                                      $"route-map {BgpPolicyConfig.SetLocalRouteMapName}");
+            }
         }
 
         // If no networks declared, auto-advertise the loopback
