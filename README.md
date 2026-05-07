@@ -9,8 +9,9 @@ A tool to generate router configurations from user-friendly intent files.
 
 ## Overview
 
-Router Quack takes intent files describing your network topology — autonomous systems, routers, interfaces, and BGP
-relationships — and turns them into router configuration files. It validates the topology, resolves cross-AS neighbours,
+Router Quack takes intent files describing your network topology — autonomous systems, routers, interfaces, BGP
+relationships and VPN setups using VRFs and MPLS BGP with LDP — and turns them into router configuration files.
+It validates the topology, resolves cross-AS neighbours,
 and auto-generates IPv4/IPv6 link and loopback addresses so you don't have to.
 
 ## Installation

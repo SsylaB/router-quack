@@ -45,6 +45,7 @@ internal static class BgpConfig
         ConfigureNetworks(router, ipv4AddressFamily, ipv6AddressFamily);
         WriteAddressFamilies(builder, ipv4AddressFamily, ipv6AddressFamily);
         WriteVpnv4AddressFamily(builder, ibgpNeighbours, vrfEbgpGroups);
+        WriteVpnv6AddressFamily(builder, ibgpNeighbours, vrfEbgpGroups);
         WriteVrfIpv4AddressFamilies(builder, vrfEbgpGroups, router);
         WriteVrfIpv6AddressFamilies(builder, vrfEbgpGroups, router);
 
@@ -189,6 +190,36 @@ internal static class BgpConfig
 
         builder.AppendLine(" !");
         builder.AppendLine(" address-family vpnv4");
+
+        foreach (var neighbour in ibgpNeighbours)
+        {
+            var addressV4 = neighbour.LoopbackAddressV4;
+            if (addressV4 is null)
+                continue;
+
+            builder.AppendLine($"  neighbor {addressV4} activate");
+            builder.AppendLine($"  neighbor {addressV4} send-community both");
+        }
+
+        builder.AppendLine("  exit-address-family");
+    }
+
+    /// <summary>
+    /// Emits the vpnv6 address-family block for PE↔PE iBGP neighbours.
+    /// Only emitted when the router has at least one VRF-bound eBGP interface,
+    /// i.e. it is acting as a PE router.
+    /// </summary>
+    private static void WriteVpnv6AddressFamily(StringBuilder builder,
+        Router[] ibgpNeighbours,
+        IGrouping<string, Interface>[] vrfEbgpGroups)
+    {
+        if (vrfEbgpGroups.Length == 0
+            || ibgpNeighbours.Length == 0
+            || !ibgpNeighbours.FirstOrDefault()!.ParentAs.AddressFamily.HasFlag(IpVersion.IPv6))
+            return;
+
+        builder.AppendLine(" !");
+        builder.AppendLine(" address-family vpnv6");
 
         foreach (var neighbour in ibgpNeighbours)
         {

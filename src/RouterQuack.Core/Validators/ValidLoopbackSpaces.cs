@@ -31,6 +31,7 @@ public class ValidLoopbackSpaces(ILogger<ValidLoopbackSpaces> logger, Context co
         var assesV6 = Context.Asses
             .Where(a => !a.FullyExternal)
             .Where(a => (a.AddressFamily & IpVersion.IPv6) == IpVersion.IPv6)
+            .Where(a => !a.Core.HasFlag(CoreType.LDP)) // We don't have IPv6 lo if we're using MPLS
             .Where(a => a.Routers.Any(r => r.LoopbackAddressV6 is null));
 
         foreach (var @as in assesV6)
