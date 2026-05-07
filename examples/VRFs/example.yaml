@@ -1,0 +1,156 @@
+# VRF example: MPLS BGP L3VPN with two customer VRFs (CUSTOMER_A, CUSTOMER_B)
+# Topology:
+#   CE-A1 (AS 200) ─── PE1 ══ P1 ══ P2 ══ P3 ══ PE2 ─── CE-A2 (AS 200)
+#   CE-B1 (AS 300) ─┘                                └─ CE-B2 (AS 300)
+#
+# PE1 and PE2 are in AS 111 (MPLS core), along with P-routers P1, P2, P3.
+# CEs are external routers in their own ASes.
+
+111:
+  igp: "OSPF"
+  core: "LDP"
+  brand: "cisco"
+  address_family: "both"
+  loopback_space_v4: "10.0.0.0/29"
+  networks_space_v4: "192.168.1.0/24"
+  networks_space_v6: "2001:1:1:2::/64"
+  vrfs:
+    CUSTOMER_A: { }
+    CUSTOMER_B: { }
+  deploy:
+    gns3:
+      server: "http://localhost:3080"
+      project: "VRFs"
+  routers:
+    PE1:
+      interfaces:
+        GigabitEthernet1/0:
+          neighbour: "P1"
+        GigabitEthernet2/0:
+          neighbour: "200:CE-A1"
+          bgp: "client"
+          vrf: "CUSTOMER_A"
+          addresses:
+            - "192.168.10.1/24"
+            - "2001:2:2:1::1/64"
+        GigabitEthernet3/0:
+          neighbour: "300:CE-B1"
+          bgp: "client"
+          vrf: "CUSTOMER_B"
+          addresses:
+            - "192.168.10.1/24"
+            - "2001:2:2:1::1/64"
+
+    P1:
+      interfaces:
+        GigabitEthernet1/0:
+          neighbour: "PE1"
+        GigabitEthernet2/0:
+          neighbour: "P2"
+
+    P2:
+      interfaces:
+        GigabitEthernet2/0:
+          neighbour: "P1"
+        GigabitEthernet1/0:
+          neighbour: "P3"
+
+    P3:
+      interfaces:
+        GigabitEthernet2/0:
+          neighbour: "P2"
+        GigabitEthernet1/0:
+          neighbour: "PE2"
+
+    PE2:
+      interfaces:
+        GigabitEthernet1/0:
+          neighbour: "P3"
+        GigabitEthernet2/0:
+          neighbour: "200:CE-A2"
+          bgp: "client"
+          vrf: "CUSTOMER_A"
+          addresses:
+            - "192.168.11.1/24"
+            - "2001:2:2:2::1/64"
+        GigabitEthernet3/0:
+          neighbour: "300:CE-B2"
+          bgp: "client"
+          vrf: "CUSTOMER_B"
+          addresses:
+            - "192.168.11.1/24"
+            - "2001:2:2:2::1/64"
+
+200:
+  address_family: "both"
+  brand: "cisco"
+  deploy:
+    gns3:
+      server: "http://localhost:3080"
+      project: "VRFs"
+  routers:
+    CE-A1:
+      loopback_v4: "10.0.1.1"
+      loopback_v6: "2001:2:2:ffff::1"
+      bgp:
+        networks:
+          - "192.168.10.0/24"
+          - "2001:2:2:1::/64"
+      interfaces:
+        GigabitEthernet1/0:
+          neighbour: "111:PE1"
+          bgp: "provider"
+          addresses:
+            - "192.168.10.2/24"
+            - "2001:2:2:1::2/64"
+    CE-A2:
+      loopback_v4: "10.0.1.2"
+      loopback_v6: "2001:10:10:ffff::2"
+      bgp:
+        networks:
+          - "192.168.11.0/24"
+          - "2001:2:2:2::/64"
+      interfaces:
+        GigabitEthernet1/0:
+          neighbour: "111:PE2"
+          bgp: "provider"
+          addresses:
+            - "192.168.11.2/24"
+            - "2001:2:2:2::2/64"
+
+300:
+  address_family: "both"
+  brand: "cisco"
+  deploy:
+    gns3:
+      server: "http://localhost:3080"
+      project: "VRFs"
+  routers:
+    CE-B1:
+      loopback_v4: "10.0.2.1"
+      loopback_v6: "2001:20:20:ffff::1"
+      bgp:
+        networks:
+          - "192.168.10.0/24"
+          - "2001:2:2:1::/64"
+      interfaces:
+        GigabitEthernet1/0:
+          neighbour: "111:PE1"
+          bgp: "provider"
+          addresses:
+            - "192.168.10.2/24"
+            - "2001:2:2:1::2/64"
+    CE-B2:
+      loopback_v4: "10.0.2.2"
+      loopback_v6: "2001:20:20:ffff::2"
+      bgp:
+        networks:
+          - "192.168.11.0/24"
+          - "2001:2:2:2::/64"
+      interfaces:
+        GigabitEthernet1/0:
+          neighbour: "111:PE2"
+          bgp: "provider"
+          addresses:
+            - "192.168.11.2/24"
+            - "2001:2:2:2::2/64"
